@@ -1,0 +1,29 @@
+[
+  {
+    "id_fatura": 1001,
+    "nif_cliente": 500123456,
+    "imposto_valor": "R$ 10.50",
+    "taxa_desconto": "2.0",
+    "valor_total": "R$ 100.00",
+    "status_pagamento": "PAGO",
+    "data_emissao": "2025-11-20"
+  },
+  {
+    "id_fatura": 1002,
+    "nif_cliente": 500987654,
+    "imposto_valor": null,
+    "taxa_desconto": "0.0",
+    "valor_total": "R$ 55,00",
+    "status_pagamento": "Pago",
+    "data_emissao": "2025-11-21"
+  },
+  {
+    "id_fatura": 1003,
+    "nif_cliente": 500333222,
+    "imposto_valor": "R$ 5,00",
+    "taxa_desconto": "1.5",
+    "valor_total": "R$ 80.50",
+    "status_pagamento": "pendente",
+    "data_emissao": null
+  }
+]
