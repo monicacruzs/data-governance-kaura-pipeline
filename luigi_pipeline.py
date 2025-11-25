@@ -41,24 +41,23 @@ class ExtractTask(luigi.Task):
 # TAREFA 2: Transformação (T) - Aplicação da Governança (RGPD/KAURA ID)
 # ==============================================================================
 class TransformTask(luigi.Task):
-    """
-    Carrega dados do ExtractTask, aplica a transformação (RGPD) e salva o resultado.
-    """
-    def requires(self):
-        return ExtractTask()
-
-    def output(self):
-        return luigi.LocalTarget(TRANSFORM_OUTPUT_PATH)
-
+# ...
     def run(self):
         print("⏳ Iniciando Tarefa: Transformação de Dados (Fase T)")
         
         input_file = self.input().path
-        # O CSV LIDO AGORA deve ter 3 colunas de dados (data, nif, valor)
+        # O CSV LIDO AGORA possui 7 colunas (o que causava o erro)
         df = pd.read_csv(input_file)
 
-        # Corrigido: Renomeando as 3 colunas de dados lidas para os nomes desejados.
+        # *** CORREÇÃO DO ERRO 'Length mismatch' ***
+        # 1. Projeta (seleciona) apenas as 3 primeiras colunas de interesse.
+        # Isso reduz o DataFrame de 7 para 3 colunas, permitindo a renomeação.
+        df = df.iloc[:, :3] 
+
+        # 2. Renomeia o DataFrame que agora SÓ TEM 3 colunas.
+        # Isso resolve o Length Mismatch.
         df.columns = ['data_emissao', 'nif_cliente', 'valor'] 
+        # *****************************************
 
         # Aplicar as transformações (Limpeza e Governança RGPD)
         df['valor'] = df['valor'].astype(str).str.replace('R$', '', regex=False).str.replace(',', '.', regex=False).astype(float)
