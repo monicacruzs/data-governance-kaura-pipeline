@@ -6,7 +6,9 @@ import luigi
 import pandas as pd
 import json
 
-# Definições de Caminho (Adicionar esta linha)
+# ===============================================
+# Definições de Caminho: TODAS as variáveis globais
+# ===============================================
 RAW_DATA_PATH = 'data/faturas_raw.json'
 EXTRACT_OUTPUT_PATH = 'data/faturas_extracted.csv'
 TRANSFORM_OUTPUT_PATH = 'data/faturas_processed.csv'
@@ -20,17 +22,16 @@ class ExtractTask(luigi.Task):
     Extrai os dados do JSON e salva como um CSV limpo.
     """
     def output(self):
-        # Usa luigi.LocalTarget, a classe padrão para arquivos locais.
         return luigi.LocalTarget(EXTRACT_OUTPUT_PATH) 
 
     def run(self):
         print("⏳ Iniciando Tarefa: Extração de Dados (Fase E)")
         
-        # Leitura do arquivo JSON bruto
         with open(RAW_DATA_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
             
         df = pd.DataFrame(data)
+        # CRUCIAL: index=False garante que o CSV tenha apenas as colunas de dados (3 colunas).
         df.to_csv(self.output().path, index=False)
         
         print(f"✅ Extração Concluída! Dados brutos salvos em: {self.output().path}")
@@ -44,26 +45,27 @@ class TransformTask(luigi.Task):
     Carrega dados do ExtractTask, aplica a transformação (RGPD) e salva o resultado.
     """
     def requires(self):
-        """Depende da Extração."""
         return ExtractTask()
 
     def output(self):
-        """Define o arquivo de saída desta tarefa."""
         return luigi.LocalTarget(TRANSFORM_OUTPUT_PATH)
 
     def run(self):
         print("⏳ Iniciando Tarefa: Transformação de Dados (Fase T)")
         
         input_file = self.input().path
+        # O CSV LIDO AGORA deve ter 3 colunas de dados (data, nif, valor)
         df = pd.read_csv(input_file)
 
+        # Corrigido: Renomeando as 3 colunas de dados lidas para os nomes desejados.
+        df.columns = ['data_emissao', 'nif_cliente', 'valor'] 
+
         # Aplicar as transformações (Limpeza e Governança RGPD)
-        df.columns = ['index', 'data_emissao', 'nif_cliente', 'valor']
         df['valor'] = df['valor'].astype(str).str.replace('R$', '', regex=False).str.replace(',', '.', regex=False).astype(float)
 
         # Governança de Dados (RGPD - Anonimização do NIF)
         df['id_anonimo'] = 'KAURA_' + (df.index + 1).astype(str)
-        df = df.drop(columns=['index', 'nif_cliente'])
+        df = df.drop(columns=['nif_cliente']) # Remove a coluna NIF original
         
         df.to_csv(self.output().path, index=False)
         
@@ -77,34 +79,28 @@ class LoadTask(luigi.Task):
     Carrega os dados processados para o destino final (simulação de um Data Mart ou DB).
     """
     def requires(self):
-        """Depende da Transformação."""
         return TransformTask()
 
     def output(self):
-        """Define um arquivo "marker" para indicar que o pipeline foi concluído."""
-        # O Target de Carregamento é apenas um arquivo simples para confirmar a conclusão.
         return luigi.LocalTarget(LOAD_OUTPUT_PATH)
 
     def run(self):
         print("⏳ Iniciando Tarefa: Carregamento de Dados (Fase L)")
-
-        # 1. Leitura dos dados processados
+        
         input_file = self.input().path
         df = pd.read_csv(input_file)
+        
+        # Simulação da Inserção
+        # ...
 
-        # 2. Simulação da Inserção
-        # Na vida real, o código aqui faria a conexão com o banco de dados (SQL, NoSQL, etc.)
-        # e inseriria as 'df' linhas na tabela final.
-
-        # 3. Criação do arquivo marcador (Target) para indicar sucesso.
+        # Criação do arquivo marcador (Target)
         with self.output().open('w') as f:
             f.write(f"Pipeline KAURA concluído com sucesso. {len(df)} linhas carregadas em {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
+            
         print(f"✅ Carregamento Concluído! Dados prontos para uso. Marker criado em: {self.output().path}")
 
 # ==============================================================================
-# PONTO DE EXECUÇÃO: Essencial para rodar o Luigi
+# PONTO DE EXECUÇÃO
 # ==============================================================================
 if __name__ == '__main__':
-    # Esta linha faz o Luigi assumir o controle e rodar a tarefa pedida na linha de comando
     luigi.run()
