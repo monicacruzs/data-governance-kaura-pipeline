@@ -1,0 +1,4 @@
+id_fatura,nif_cliente,imposto_valor,taxa_desconto,valor_total,status_pagamento,data_emissao
+1001,500123456,R$ 10.50,2.0,R$ 100.00,PAGO,2025-11-20
+1002,500987654,,0.0,"R$ 55,00",Pago,2025-11-21
+1003,500333222,"R$ 5,00",1.5,R$ 80.50,pendente,
