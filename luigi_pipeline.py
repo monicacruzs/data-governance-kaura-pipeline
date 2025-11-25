@@ -7,10 +7,10 @@ import pandas as pd
 import json
 
 # Definições de Caminho (Adicionar esta linha)
+RAW_DATA_PATH = 'data/faturas_raw.json'
+EXTRACT_OUTPUT_PATH = 'data/faturas_extracted.csv'
+TRANSFORM_OUTPUT_PATH = 'data/faturas_processed.csv'
 LOAD_OUTPUT_PATH = 'data/pipeline_completo.marker' 
-# RAW_DATA_PATH = 'data/faturas_raw.json'
-# EXTRACT_OUTPUT_PATH = 'data/faturas_extracted.csv'
-# TRANSFORM_OUTPUT_PATH = 'data/faturas_processed.csv'
 
 # ==============================================================================
 # TAREFA 1: Extração (E)
