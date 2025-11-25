@@ -1,3 +1,8 @@
+# ==============================================================================
+# Fase 2: Estrutura Luigi (Extração)
+# No Luigi, o pipeline não é um único script, mas sim uma coleção de Tarefas (Tasks) que dependem umas das outras. Vamos começar com a Extração.
+# ==============================================================================
+
 import luigi
 import luigi.contrib.local_file # Para o Target (onde a saida sera salva)
 import pandas as pd
