@@ -19,11 +19,13 @@ class ExtractTask(luigi.Task):
     Extrai os dados do JSON e salva como um CSV limpo.
     """
     def output(self):
-        return luigi.LocalTarget(EXTRACT_OUTPUT_PATH)
+        # Usa luigi.LocalTarget, a classe padrão para arquivos locais.
+        return luigi.LocalTarget(EXTRACT_OUTPUT_PATH) 
 
     def run(self):
         print("⏳ Iniciando Tarefa: Extração de Dados (Fase E)")
         
+        # Leitura do arquivo JSON bruto
         with open(RAW_DATA_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
             
@@ -34,7 +36,7 @@ class ExtractTask(luigi.Task):
 
 
 # ==============================================================================
-# TAREFA 2: Transformação (T)
+# TAREFA 2: Transformação (T) - Aplicação da Governança (RGPD/KAURA ID)
 # ==============================================================================
 class TransformTask(luigi.Task):
     """
@@ -67,9 +69,8 @@ class TransformTask(luigi.Task):
         print(f"✅ Transformação Concluída! Dados transformados salvos em: {self.output().path}")
 
 # ==============================================================================
-# EXECUÇÃO (Ponto de entrada do Luigi)
+# PONTO DE EXECUÇÃO: Essencial para rodar o Luigi
 # ==============================================================================
-# Não é necessário um "main" para o Luigi, mas esta linha habilita o modo CLI
-# e garante que o script seja executado de forma correta.
 if __name__ == '__main__':
-    pass # Mantemos vazio, pois a execução será via linha de comando
+    # Esta linha faz o Luigi assumir o controle e rodar a tarefa pedida na linha de comando
+    luigi.run()
