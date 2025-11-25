@@ -9,34 +9,67 @@ import json
 # Definições de Caminho
 RAW_DATA_PATH = 'data/faturas_raw.json'
 EXTRACT_OUTPUT_PATH = 'data/faturas_extracted.csv'
+TRANSFORM_OUTPUT_PATH = 'data/faturas_processed.csv'
 
 # ==============================================================================
 # TAREFA 1: Extração (E)
 # ==============================================================================
 class ExtractTask(luigi.Task):
     """
-    Extrai os dados do JSON e salva como um CSV limpo para a próxima fase.
+    Extrai os dados do JSON e salva como um CSV limpo.
     """
-    # Método obrigatório: Define o destino final da saída desta tarefa.
     def output(self):
-        """Define o arquivo de saída desta tarefa."""
         return luigi.LocalTarget(EXTRACT_OUTPUT_PATH)
 
-    # Método obrigatório: Contém a lógica de extração real.
     def run(self):
-        """Executa a lógica de extração."""
-        
         print("⏳ Iniciando Tarefa: Extração de Dados (Fase E)")
         
-        # Leitura do arquivo JSON bruto
         with open(RAW_DATA_PATH, 'r', encoding='utf-8') as f:
             data = json.load(f)
             
-        # Criação do DataFrame com os dados
         df = pd.DataFrame(data)
-        
-        # Salva o resultado da extração como CSV
-        # O self.output().path aponta para 'data/faturas_extracted.csv'
         df.to_csv(self.output().path, index=False)
         
         print(f"✅ Extração Concluída! Dados brutos salvos em: {self.output().path}")
+
+
+# ==============================================================================
+# TAREFA 2: Transformação (T)
+# ==============================================================================
+class TransformTask(luigi.Task):
+    """
+    Carrega dados do ExtractTask, aplica a transformação (RGPD) e salva o resultado.
+    """
+    def requires(self):
+        """Depende da Extração."""
+        return ExtractTask()
+
+    def output(self):
+        """Define o arquivo de saída desta tarefa."""
+        return luigi.LocalTarget(TRANSFORM_OUTPUT_PATH)
+
+    def run(self):
+        print("⏳ Iniciando Tarefa: Transformação de Dados (Fase T)")
+        
+        input_file = self.input().path
+        df = pd.read_csv(input_file)
+
+        # Aplicar as transformações (Limpeza e Governança RGPD)
+        df.columns = ['index', 'data_emissao', 'nif_cliente', 'valor']
+        df['valor'] = df['valor'].astype(str).str.replace('R$', '', regex=False).str.replace(',', '.', regex=False).astype(float)
+
+        # Governança de Dados (RGPD - Anonimização do NIF)
+        df['id_anonimo'] = 'KAURA_' + (df.index + 1).astype(str)
+        df = df.drop(columns=['index', 'nif_cliente'])
+        
+        df.to_csv(self.output().path, index=False)
+        
+        print(f"✅ Transformação Concluída! Dados transformados salvos em: {self.output().path}")
+
+# ==============================================================================
+# EXECUÇÃO (Ponto de entrada do Luigi)
+# ==============================================================================
+# Não é necessário um "main" para o Luigi, mas esta linha habilita o modo CLI
+# e garante que o script seja executado de forma correta.
+if __name__ == '__main__':
+    pass # Mantemos vazio, pois a execução será via linha de comando
