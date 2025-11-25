@@ -41,11 +41,10 @@ class ExtractTask(luigi.Task):
 # TAREFA 2: Transformação (T) - Aplicação da Governança (RGPD/KAURA ID)
 # ==============================================================================
 class TransformTask(luigi.Task):
-# ...
     def run(self):
         print("⏳ Iniciando Tarefa: Transformação de Dados (Fase T)")
         
-        input_file = self.input().path
+        input_file = self.input()[0].path
         # O CSV LIDO AGORA possui 7 colunas (o que causava o erro)
         df = pd.read_csv(input_file)
 
