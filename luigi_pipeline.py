@@ -6,10 +6,11 @@ import luigi
 import pandas as pd
 import json
 
-# Definições de Caminho
-RAW_DATA_PATH = 'data/faturas_raw.json'
-EXTRACT_OUTPUT_PATH = 'data/faturas_extracted.csv'
-TRANSFORM_OUTPUT_PATH = 'data/faturas_processed.csv'
+# Definições de Caminho (Adicionar esta linha)
+LOAD_OUTPUT_PATH = 'data/pipeline_completo.marker' 
+# RAW_DATA_PATH = 'data/faturas_raw.json'
+# EXTRACT_OUTPUT_PATH = 'data/faturas_extracted.csv'
+# TRANSFORM_OUTPUT_PATH = 'data/faturas_processed.csv'
 
 # ==============================================================================
 # TAREFA 1: Extração (E)
@@ -67,6 +68,39 @@ class TransformTask(luigi.Task):
         df.to_csv(self.output().path, index=False)
         
         print(f"✅ Transformação Concluída! Dados transformados salvos em: {self.output().path}")
+
+# ==============================================================================
+# TAREFA 3: Carregamento (L)
+# ==============================================================================
+class LoadTask(luigi.Task):
+    """
+    Carrega os dados processados para o destino final (simulação de um Data Mart ou DB).
+    """
+    def requires(self):
+        """Depende da Transformação."""
+        return TransformTask()
+
+    def output(self):
+        """Define um arquivo "marker" para indicar que o pipeline foi concluído."""
+        # O Target de Carregamento é apenas um arquivo simples para confirmar a conclusão.
+        return luigi.LocalTarget(LOAD_OUTPUT_PATH)
+
+    def run(self):
+        print("⏳ Iniciando Tarefa: Carregamento de Dados (Fase L)")
+
+        # 1. Leitura dos dados processados
+        input_file = self.input().path
+        df = pd.read_csv(input_file)
+
+        # 2. Simulação da Inserção
+        # Na vida real, o código aqui faria a conexão com o banco de dados (SQL, NoSQL, etc.)
+        # e inseriria as 'df' linhas na tabela final.
+
+        # 3. Criação do arquivo marcador (Target) para indicar sucesso.
+        with self.output().open('w') as f:
+            f.write(f"Pipeline KAURA concluído com sucesso. {len(df)} linhas carregadas em {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+        print(f"✅ Carregamento Concluído! Dados prontos para uso. Marker criado em: {self.output().path}")
 
 # ==============================================================================
 # PONTO DE EXECUÇÃO: Essencial para rodar o Luigi
